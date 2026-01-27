@@ -5,20 +5,22 @@ const postSchema = new mongoose.Schema({
         type : String,
         required : true
     },
-    Description : {
+    description : {
         type : String,
         required : true
     },
-    likes : {
+    likes : [{
         type : mongoose.Schema.Types.ObjectId,
         ref : 'User'
-    },
+    }],
     author : {
-        type : String,
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'User',
         required : true
-    }
+    },
+    images : [String],
 });
 
-const post = new mongoose.model('Post', postSchema);
+const Post = new mongoose.model('Post', postSchema);
 
-export default post;
+export default Post;

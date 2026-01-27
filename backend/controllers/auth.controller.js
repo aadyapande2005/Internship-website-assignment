@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 
 
@@ -8,7 +7,7 @@ export const register = async (req, res) => {
 
         if(!username && !email && !password){
             return res
-            .status(403)
+            .status(400)
             .json({message : 'Enter values for all fields'});
         }
 
@@ -18,7 +17,7 @@ export const register = async (req, res) => {
 
         if(finduser){
             return res
-            .status(403)
+            .status(400)
             .json({message : 'user already exists'});
         }
 
@@ -37,7 +36,7 @@ export const register = async (req, res) => {
 
         return res
         .status(200)
-        .json({message : 'register successful', newuser});
+        .json({message : 'register successful', user : newuser});
     } catch (error) {
         console.log(error);
         return res
@@ -48,17 +47,18 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
+        console.log(process.env.CORS_ORIGIN);
         const {username, email, password} = req.body;
 
         if(!password) {
             return res
-            .status(403)
+            .status(400)
             .json({message : 'password is required for login'});
         }
 
         if(!username && !email) {
             return res
-            .status(403)
+            .status(400)
             .json({message : 'Username or email is required for login'});
         }
 
@@ -68,7 +68,7 @@ export const login = async (req, res) => {
 
         if(!finduser) {
             return res
-            .status(403)
+            .status(400)
             .json({message : 'user does not exist'});
         }
 
@@ -78,7 +78,7 @@ export const login = async (req, res) => {
 
         if(!isPasswordCorrect) {
             return res
-            .status(403)
+            .status(400)
             .json({message : 'Wrong password'});
         }
 
@@ -86,8 +86,13 @@ export const login = async (req, res) => {
 
         res
         .status(200)
-        .cookie('accessToken', accessToken)
-        .json({message : 'Login successful', finduser});
+        .cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        })
+        .json({message : 'Login successful', user : finduser});
 
     } catch (error) {
         console.log(error);
@@ -109,4 +114,10 @@ export const logout = async (req, res) => {
         .json({message : 'Error while logging out...'})
     }  
 }
+
+export const isLoggedIn = async () => {
+    
+}
+
+
 
