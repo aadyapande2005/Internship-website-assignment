@@ -6,8 +6,6 @@ const getposts = async () => {
 
     const posts: PostData[] = response.data.posts
 
-    console.log(posts)
-
     return { posts };
 }
 

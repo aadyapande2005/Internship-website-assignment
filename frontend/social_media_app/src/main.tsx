@@ -3,11 +3,19 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { ErrorPage } from './ErrorPage.tsx'
-import Login from './Login.tsx'
-import Register from './Register.tsx'
-import PostPage from '../components/PostPage.tsx'
+import { ErrorPage } from '../pages/ErrorPage.tsx'
+import Login from '../pages/LoginPage.tsx'
+import Register from '../pages/RegisterPage.tsx'
+import HomePage from '../components/HomePage.tsx'
+import UserPage from '../pages/UserPage.tsx'
+import CreatePostPage from '../pages/CreatePostPage.tsx'
+import PostPage from '../pages/PostPage.tsx'
+
 import getposts from '../loaders/postLoader'
+import userPosts from '../loaders/userPostLoader.ts'
+
+import AuthContextProvider from '../context/authContext.tsx'
+import Protected from './Protected.tsx'
 
 const router = createBrowserRouter([
   {
@@ -17,7 +25,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element:<PostPage />,
+        element:<HomePage />,
         loader: getposts
       },
       {
@@ -29,11 +37,32 @@ const router = createBrowserRouter([
         element:<Register />
       }
     ]
+  },
+  {
+    path: '/',
+    element: <Protected />,
+    children : [
+      {
+        path: '/profile',
+        element: <UserPage />,
+        loader: userPosts
+      },
+      {
+        path:'/post',
+        element: <CreatePostPage />
+      },
+      {
+        path:'/post/:postid',
+        element: <PostPage />
+      }
+    ]
   }
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthContextProvider>
+      <RouterProvider router={router} />
+    </AuthContextProvider>
   </StrictMode>,
 )

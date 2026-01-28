@@ -23,7 +23,6 @@ function PostCard(props: PostCardProps) {
   const handleLikes = async () => {
     try {
       postlikes = await axios.get(`http://localhost:3000/post/getlikes/${props._id}`,{withCredentials:true})
-      console.log(postlikes)
       setShowLikes(prev => !prev)
       setUserLikes(postlikes.data.post.likes);
 
@@ -44,10 +43,13 @@ function PostCard(props: PostCardProps) {
       }
 
       setlike(prev => !prev)
-      setShowLikes(prev => !prev)
+      setShowLikes(false)
 
     } catch (error) {
       console.log(error?.response.data);
+      if(error?.response.status === 401) {
+        alert('Please register or login to like')
+      }      
     }
   }
 

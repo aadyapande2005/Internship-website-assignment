@@ -8,7 +8,7 @@ export const verifyjwt = async (req, res, next) => {
         
         if(!token) {
             return res
-            .status(403)
+            .status(401)
             .json({message : 'token not present'});
         }
 

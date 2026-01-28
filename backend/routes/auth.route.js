@@ -6,7 +6,8 @@ const authroutes = express();
 import {
     register, 
     login, 
-    logout
+    logout,
+    isLoggedIn
 } 
 from '../controllers/auth.controller.js';
 
@@ -14,6 +15,7 @@ from '../controllers/auth.controller.js';
 authroutes.post('/register', register);
 authroutes.post('/login', login);
 authroutes.get('/logout', verifyjwt, logout);
+authroutes.get('/islogin', verifyjwt, isLoggedIn);
 
 
 export default authroutes;

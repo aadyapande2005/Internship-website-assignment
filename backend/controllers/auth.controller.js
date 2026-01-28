@@ -40,7 +40,7 @@ export const register = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res
-        .status(400)
+        .status(500)
         .json({message : 'Error while registering...'})
     }    
 }
@@ -84,6 +84,8 @@ export const login = async (req, res) => {
 
         const accessToken = finduser.generateAccessToken();
 
+        const {password: userpassword, refreshToken, ...user} = finduser.toObject()
+
         res
         .status(200)
         .cookie('accessToken', accessToken, {
@@ -92,12 +94,12 @@ export const login = async (req, res) => {
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         })
-        .json({message : 'Login successful', user : finduser});
+        .json({message : 'Login successful', user});
 
     } catch (error) {
         console.log(error);
         res
-        .status(400)
+        .status(500)
         .json({message : 'Error while logging in...'})
     }  
 }
@@ -110,13 +112,30 @@ export const logout = async (req, res) => {
         .json({message : 'logout successful'});
     } catch (error) {
         res
-        .status(400)
+        .status(500)
         .json({message : 'Error while logging out...'})
     }  
 }
 
-export const isLoggedIn = async () => {
-    
+export const isLoggedIn = async (req, res) => {
+    try {
+        if(!req.user) {
+            return res
+            .status(400)
+        }
+
+        const user = await User.findById(req.user.id, 'username email avatar');
+
+        return res
+        .status(200)
+        .json({user})
+
+    } catch (error) {
+        console.log(error)
+        return res
+        .status(500)
+        .json({message: 'error while authenticating'})
+    }
 }
 
 

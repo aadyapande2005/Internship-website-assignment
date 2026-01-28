@@ -3,13 +3,12 @@ import { useLoaderData } from 'react-router-dom';
 import type { PostData } from '../interfaces/postInterface';
 
 
-function PostPage() {
+function HomePage() {
   let s: string = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Hic, id suscipit. Autem doloribus, maiores itaque facilis cupiditate nesciunt asperiores, deserunt consequuntur, et eius incidunt at natus perspiciatis distinctio repellendus animi.';
 
   let img: string = './post.jpeg';
 
-  const { posts } = useLoaderData() as { posts: PostData[] };
-  console.log(posts);
+  const {posts} = useLoaderData() as { posts: PostData[] };
 
   return (
     <>
@@ -30,4 +29,4 @@ function PostPage() {
   )
 }
 
-export default PostPage
+export default HomePage

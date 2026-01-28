@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { apiRequest } from '../lib/apiRequest';
+import { useAuth } from '../context/authContext';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -8,20 +9,27 @@ function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate()
 
+  const {setUser} = useAuth();
+
   const handleSubmit = async (e) => {
     console.log('Username:', username);
     console.log('Password:', password);
 
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', 
+      const response = await apiRequest.post('/auth/login', 
         {
           username,
           password
-      },
-      { withCredentials: true })
+      })
   
       console.log(response)
       e.preventDefault()
+
+      const {createdAt, updatedAt, ...user} = response.data.user
+
+      console.log(user)
+
+      setUser(user)
 
       navigate('/')
 

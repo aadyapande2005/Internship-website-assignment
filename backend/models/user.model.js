@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema({
         avatar : {
             type : String
         },
+        likes : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'Post'
+        }],
+        posts : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'Post'
+        }],
         refreshToken : {
             type : String
         }    

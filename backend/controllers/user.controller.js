@@ -5,7 +5,7 @@ export const getuser = async (req, res) => {
     try {
         const userid = req.params.userid;
 
-        const finduser = await User.findById(userid);
+        const finduser = await User.findById(userid).populate('posts');
 
         if(!finduser) {
             return res
@@ -108,3 +108,5 @@ export const deleteuser = async (req, res) => {
         .json({message : `error while deleting user`});
     }
 }
+
+
