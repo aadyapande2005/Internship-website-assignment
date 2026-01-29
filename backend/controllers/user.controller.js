@@ -109,4 +109,27 @@ export const deleteuser = async (req, res) => {
     }
 }
 
+export const getuserlikes = async (req, res) => {
+    try {
+        const userid = req.user.id;
 
+        const finduser = await User.findById(userid, 'likes');
+
+        if(!finduser) {
+            return res
+            .status(403)
+            .json({message : 'User doesn\'t exist'});
+        }
+
+        return res
+        .status(200)
+        .json({message : `user likes fetched successfully`, liked_posts : finduser})
+
+
+    } catch (error) {
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : `error while finding user`});
+    }
+}

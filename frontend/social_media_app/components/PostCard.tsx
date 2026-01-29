@@ -8,15 +8,17 @@ interface PostCardProps {
   image: string
   description: string
   author: string
-  likes: string[]
+  likes: string[],
+  isLiked: boolean
 }
 
 function PostCard(props: PostCardProps) {
-  const [like, setlike] = useState<boolean>(false);
+  const [like, setlike] = useState<boolean>(props.isLiked);
 
   const [showlikes, setShowLikes] = useState<boolean>(false)
 
   const [userlikes, setUserLikes] = useState([]);
+
 
   let postlikes;
 

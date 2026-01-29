@@ -8,8 +8,18 @@ function HomePage() {
 
   let img: string = './post.jpeg';
 
-  const {posts} = useLoaderData() as { posts: PostData[] };
+  const {posts, liked_posts} = useLoaderData() as { posts: PostData[], liked_posts: [string] };
 
+  for(let i=0; i<posts.length; i++) {
+    for(let j=0; j<liked_posts.length; j++) {
+      if(posts[i]._id === liked_posts[j]) {
+        posts[i].isLiked = true;
+        continue;
+      }
+    }
+    posts.isLiked = false
+  }
+  
   return (
     <>
       <div className='flex flex-wrap justify-center gap-3 m-2'>
@@ -21,7 +31,8 @@ function HomePage() {
             author={post.author.username} 
             title={post.title} 
             description={post.description} 
-            likes={post.likes}  
+            likes={post.likes}
+            isLiked={post.isLiked}
           />
         ))}
       </div>

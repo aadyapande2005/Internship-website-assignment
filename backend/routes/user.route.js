@@ -7,13 +7,15 @@ import {
     getuser, 
     getusers,
     updateuser,
-    deleteuser
+    deleteuser,
+    getuserlikes
 } 
 from '../controllers/user.controller.js';
 
 
 userroutes.get('/', getusers);
-userroutes.get('/:userid', verifyjwt, getuser);
+userroutes.get('/profile/:userid', verifyjwt, getuser);
+userroutes.get('/post/liked', verifyjwt, getuserlikes);
 userroutes.put('/:userid', verifyjwt, updateuser)
 userroutes.delete('/:userid', verifyjwt, deleteuser);
 

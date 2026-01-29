@@ -92,10 +92,16 @@ export const likepost = async (req, res) => {
             { new: true }
         );
 
-        if(!liked_post) {
+        const likeByUser = await User.findByIdAndUpdate(
+            userid,
+            { $addToSet: { likes: postid } },
+            { new: true }
+        )
+
+        if(!liked_post || !likeByUser) {
             return res
             .status(404)
-            .json({message : 'post not found'});
+            .json({message : 'error while liking'});
         }
 
         return res
@@ -120,8 +126,14 @@ export const unlikepost = async (req, res) => {
             { $pull: { likes: userid } },
             { new: true }
         );
+        
+        const user_liked_post = await User.findByIdAndUpdate(
+            userid, 
+            { $pull: { likes: postid } },
+            { new: true }
+        );
 
-        if(!liked_post) {
+        if(!liked_post || !user_liked_post) {
             return res
             .status(404)
             .json({message : 'post not found'});

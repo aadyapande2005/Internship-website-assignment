@@ -13,7 +13,7 @@ const userPosts = async ({ params }: { params: { userId?: string } }) => {
         const userId = user._id;
         
         console.log(user)
-        let posts = await apiRequest.get(`/user/${userId}`);
+        let posts = await apiRequest.get(`/user/profile/${userId}`);
 
         posts = posts.data.user.posts
 

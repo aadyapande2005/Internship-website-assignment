@@ -1,12 +1,41 @@
-import axios from 'axios'
-import type {PostData} from '../interfaces/postInterface'
+import { apiRequest } from '../lib/apiRequest'
 
 const getposts = async () => {
-    const response = await axios.get('http://127.0.0.1:3000/post')
+    try {
+        let posts
+        try {
+            const response = await apiRequest.get('/post')
+            
+            posts = response.data.posts
+        
+    
+        } catch (error) {
+            console.log(error?.response.data)
+            return { posts:[] }
+        }
+    
+        try {
+            const user = await apiRequest.get('/auth/islogin');
+            
+            const userid = user.data.user._id;
+        
+            let liked_posts = await apiRequest.get(`user/post/liked`)
+        
+            
+            liked_posts = liked_posts.data.liked_posts.likes
+            console.log(liked_posts)
+    
+            return {posts, liked_posts}
+    
+        } catch (error) {
+            console.log(error?.response.data)
+            return { posts, liked_posts: [] }
+        }
+    } catch (error) {
+        console.log(error)
+        return {posts: [], liked_posts: []}
+    }
 
-    const posts: PostData[] = response.data.posts
-
-    return { posts };
 }
 
 export default getposts;
