@@ -3,7 +3,7 @@ import User from '../models/user.model.js';
 
 export const verifyjwt = async (req, res, next) => {
     try {
-        console.log("token :",req.cookies);
+        // console.log("token :",req.cookies);
         const token = req.cookies?.accessToken;
         
         if(!token) {
@@ -18,7 +18,7 @@ export const verifyjwt = async (req, res, next) => {
         const username = decodedToken.username;
         const email = decodedToken.email;
 
-        const finduser = await User.findById(id);
+        const finduser = await User.findOne({ _id: id, isAvailable: { $ne: false } });
 
         if(!finduser) {
             return res

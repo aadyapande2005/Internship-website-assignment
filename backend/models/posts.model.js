@@ -18,8 +18,16 @@ const postSchema = new mongoose.Schema({
         ref : 'User',
         required : true
     },
-    images : [String],
-});
+    topics : [{
+        type : String,
+        lowercase : true,
+        trim : true
+    }],
+    isAvailable: {
+        type: Boolean,
+        default: true
+    },
+},{timestamps:true});
 
 const Post = new mongoose.model('Post', postSchema);
 

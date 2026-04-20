@@ -18,7 +18,7 @@ export const register = async (req, res) => {
         if(finduser){
             return res
             .status(400)
-            .json({message : 'user already exists'});
+            .json({message : 'username or email not available'});
         }
 
         const newuser = await User.create({
@@ -63,7 +63,8 @@ export const login = async (req, res) => {
         }
 
         const finduser = await User.findOne({
-            $or : [{username}, {email}]
+            $or : [{username}, {email}],
+            isAvailable: { $ne: false }
         });
 
         if(!finduser) {
@@ -124,7 +125,13 @@ export const isLoggedIn = async (req, res) => {
             .status(400)
         }
 
-        const user = await User.findById(req.user.id, 'username email avatar');
+        const user = await User.findOne({ _id: req.user.id, isAvailable: { $ne: false } }, 'username email');
+
+        if(!user) {
+            return res
+            .status(403)
+            .json({message: 'user not available'});
+        }
 
         return res
         .status(200)

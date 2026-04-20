@@ -7,13 +7,19 @@ function Register() {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (isSubmitting) return
+
     console.log('Username:', username);
     console.log('Email:', email);
     console.log('Password:', password);
+    setError('')
+    setIsSubmitting(true)
 
     try {
       const response = await axios.post('http://127.0.0.1:3000/auth/register', 
@@ -24,7 +30,6 @@ function Register() {
       })
 
       console.log(response.data)
-      e.preventDefault()
 
       navigate('/login')
 
@@ -39,50 +44,54 @@ function Register() {
         console.log('Error:', error.message);
         setError(error.message);
       }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <>
-      <div className="flex h-screen w-full justify-center">
-        <div className="flex flex-col h-120 w-120 my-10 bg-amber-100 rounded-2xl shadow-2xl shadow-gray-500">
+      <div className="flex min-h-[calc(100vh-8rem)] w-full items-center justify-center px-4 py-10">
+        <div className="rise-in flex w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-amber-50/90 shadow-2xl shadow-amber-900/15">
 
-          <div className="flex-1 flex justify-center items-center">
-            <div className="text-5xl text-gray-600 font-mono underline">Sign up</div>
+          <div className="flex flex-1 items-center justify-center bg-linear-to-r from-orange-100 to-amber-200 px-6 py-8">
+            <div className="display-title text-5xl text-amber-950">Create Account</div>
           </div>
 
-          <div className="flex-3 flex flex-col gap-4 items-center justify-center border-t-2 border-gray-400">
-            <h1 className='text-4xl italic text-bold underline font-mono text-gray-600'>Welcome {username} !!</h1>
+          <div className="flex flex-col items-center justify-center gap-4 border-t border-amber-200 p-7">
+            <h1 className='display-title text-3xl italic text-amber-900'>Start blogging {username || 'today'}!</h1>
             <input 
               type="text" 
               placeholder="username" 
-              className="border-gray-400 border-2 py-2 px-5 rounded-2xl w-60 mt-4"
+              className="mt-2 w-full rounded-2xl border border-amber-300 bg-white px-5 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
             <input 
               type="text" 
               placeholder="email" 
-              className="border-gray-400 border-2 py-2 px-5 rounded-2xl w-60"
+              className="w-full rounded-2xl border border-amber-300 bg-white px-5 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <input 
               type="password" 
               placeholder="password" 
-              className="border-gray-400 border-2 py-2 px-5 rounded-2xl w-60"
+              className="w-full rounded-2xl border border-amber-300 bg-white px-5 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
 
             <button 
-              className="border px-5 py-1 rounded-xl text-amber-700 text-lg cursor-pointer" 
+              className="pressable mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-amber-800 px-5 py-3 text-lg font-semibold text-amber-50 shadow-lg shadow-orange-300/40 transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-70" 
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Sign up
+              {isSubmitting && <span className="loading-dot" />}
+              {isSubmitting ? 'Creating account...' : 'Sign up'}
             </button>
 
-            <div className="text-red-500">{error}</div>
+            <div className="min-h-6 text-red-500">{error}</div>
           </div>
         </div>
       </div>

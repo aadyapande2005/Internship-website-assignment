@@ -1,16 +1,52 @@
 import Post from "../models/posts.model.js";
 import User from "../models/user.model.js";
 
+const sanitizeTopics = (topics) => {
+    if (!topics) return [];
+
+    const inputTopics = Array.isArray(topics)
+        ? topics
+        : String(topics).split(',');
+
+    const normalized = inputTopics
+        .map((topic) => String(topic).trim().toLowerCase())
+        .filter(Boolean);
+
+    return [...new Set(normalized)];
+}
+
 export const getposts = async (req, res) => {
     try {
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 9, 1), 20);
+        const skip = (page - 1) * limit;
 
-        const posts = await Post.find()
-            .populate('author', 'username avatar email')
-            .limit(20);
+        const totalPosts = await Post.countDocuments({ isAvailable: { $ne: false } });
+
+        const posts = await Post.find({ isAvailable: { $ne: false } })
+            .populate({ path: 'author', select: 'username email', match: { isAvailable: { $ne: false } } })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const availablePosts = posts.filter((post) => Boolean(post.author));
+
+        const totalPages = Math.max(Math.ceil(totalPosts / limit), 1);
 
         return res
         .status(200)
-        .json({message : 'posts loaded successfully', posts})
+        .json({
+            message : 'posts loaded successfully',
+            posts: availablePosts,
+            pagination: {
+                page,
+                limit,
+                totalPosts,
+                totalPages,
+                hasPrevPage: page > 1,
+                hasNextPage: page < totalPages
+            }
+        })
 
     } catch (error) {
         console.log(error);
@@ -24,9 +60,10 @@ export const getpost = async (req, res) => {
     try {
         const postid = req.params.postid;
 
-        const findpost = await Post.findById(postid);
+        const findpost = await Post.findOne({ _id: postid, isAvailable: { $ne: false } })
+            .populate({ path: 'author', select: 'username email', match: { isAvailable: { $ne: false } } });
 
-        if(!findpost) {
+        if(!findpost || !findpost.author) {
             return res
             .status(403)
             .json({message : 'this post doesn\'t exist'});
@@ -44,29 +81,109 @@ export const getpost = async (req, res) => {
     }
 }
 
+export const getpostsbytopic = async (req, res) => {
+    try {
+        const topic = String(req.params.topic || '').trim().toLowerCase();
+
+        if(!topic) {
+            return res
+            .status(400)
+            .json({message : 'topic is required'});
+        }
+
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 9, 1), 20);
+        const skip = (page - 1) * limit;
+
+        const totalPosts = await Post.countDocuments({ topics: topic, isAvailable: { $ne: false } });
+
+        const posts = await Post.find({ topics: topic, isAvailable: { $ne: false } })
+            .populate({ path: 'author', select: 'username email', match: { isAvailable: { $ne: false } } })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const availablePosts = posts.filter((post) => Boolean(post.author));
+
+        const totalPages = Math.max(Math.ceil(totalPosts / limit), 1);
+
+        return res
+        .status(200)
+        .json({
+            message : `posts loaded successfully for topic ${topic}`,
+            posts: availablePosts,
+            pagination: {
+                page,
+                limit,
+                totalPosts,
+                totalPages,
+                hasPrevPage: page > 1,
+                hasNextPage: page < totalPages
+            },
+            topic
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : 'error while getting posts by topic'});
+    }
+}
+
 export const generatepost = async (req, res) => {
     try {
         const userid = req.user.id;
 
-        const {title, description} = req.body;
+        const {title, description, topics} = req.body;
+        const normalizedTopics = sanitizeTopics(topics);
 
-        if(!title && !description) {
+        if(!title || !description) {
             return res
             .status(400)
             .json({message : 'both title and description are needed for creating a post'});
         }
 
+        if(normalizedTopics.length > 3) {
+            return res
+            .status(400)
+            .json({message : 'maximum 3 topics are allowed'});
+        }
+
+
+        const activeUser = await User.findOne({ _id: userid, isAvailable: { $ne: false } });
+
+        if(!activeUser) {
+            return res
+            .status(404)
+            .json({message : 'active user not found'});
+        }
 
         const newpost = await Post.create({
             title,
             description,
-            author : userid
+            author : userid,
+            topics : normalizedTopics
         })
 
         if(!newpost) {
             return res
             .status(500)
             .json({message : 'error while creating post'});
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userid,
+            { $addToSet: { posts: newpost._id } },
+            { new: true }
+        );
+
+        if(!updatedUser) {
+            console.log('post deleted')
+            await Post.findByIdAndUpdate(newpost._id, { isAvailable: false });
+            return res
+            .status(404)
+            .json({message : 'user not found while linking post'});
         }
 
         return res
@@ -86,22 +203,29 @@ export const likepost = async (req, res) => {
         const userid = req.user.id;
         const postid = req.params.postid;
 
-        const liked_post = await Post.findByIdAndUpdate(
-            postid, 
+        const liked_post = await Post.findOneAndUpdate(
+            { _id: postid, isAvailable: { $ne: false } },
             { $addToSet: { likes: userid } },
             { new: true }
         );
 
-        const likeByUser = await User.findByIdAndUpdate(
-            userid,
-            { $addToSet: { likes: postid } },
-            { new: true }
-        )
-
-        if(!liked_post || !likeByUser) {
+        if(!liked_post) {
             return res
             .status(404)
-            .json({message : 'error while liking'});
+            .json({message : 'post not found or unavailable'});
+        }
+
+        const likeByUser = await User.findOneAndUpdate(
+            { _id: userid, isAvailable: { $ne: false } },
+            { $addToSet: { likes: postid } },
+            { new: true }
+        );
+
+        if(!likeByUser) {
+            await Post.findByIdAndUpdate(postid, { $pull: { likes: userid } });
+            return res
+            .status(404)
+            .json({message : 'user not found or unavailable'});
         }
 
         return res
@@ -121,22 +245,28 @@ export const unlikepost = async (req, res) => {
         const userid = req.user.id;
         const postid = req.params.postid;
 
-        const liked_post = await Post.findByIdAndUpdate(
-            postid, 
+        const liked_post = await Post.findOneAndUpdate(
+            { _id: postid, isAvailable: { $ne: false } },
             { $pull: { likes: userid } },
             { new: true }
         );
+
+        if(!liked_post) {
+            return res
+            .status(404)
+            .json({message : 'post not found or unavailable'});
+        }
         
-        const user_liked_post = await User.findByIdAndUpdate(
-            userid, 
+        const user_liked_post = await User.findOneAndUpdate(
+            { _id: userid, isAvailable: { $ne: false } },
             { $pull: { likes: postid } },
             { new: true }
         );
 
-        if(!liked_post || !user_liked_post) {
+        if(!user_liked_post) {
             return res
             .status(404)
-            .json({message : 'post not found'});
+            .json({message : 'user not found or unavailable'});
         }
 
         return res
@@ -151,11 +281,90 @@ export const unlikepost = async (req, res) => {
     }
 }
 
+export const savepost = async (req, res) => {
+    try {
+        const userid = req.user.id;
+        const postid = req.params.postid;
+
+        const postToSave = await Post.findOne({ _id: postid, isAvailable: { $ne: false } });
+
+        if(!postToSave) {
+            return res
+            .status(404)
+            .json({message : 'post not found or unavailable'});
+        }
+
+        const savedByUser = await User.findOneAndUpdate(
+            { _id: userid, isAvailable: { $ne: false } },
+            { $addToSet: { savedPosts: postid } },
+            { new: true }
+        );
+
+        if(!savedByUser) {
+            return res
+            .status(404)
+            .json({message : 'user not found or unavailable'});
+        }
+
+        return res
+        .status(200)
+        .json({message : `post saved successfully by user with id ${userid}`});
+
+    } catch (error) {
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : `error while saving post`});
+    }
+}
+
+export const unsavepost = async (req, res) => {
+    try {
+        const userid = req.user.id;
+        const postid = req.params.postid;
+
+        const postToUnsave = await Post.findOne({ _id: postid, isAvailable: { $ne: false } });
+
+        if(!postToUnsave) {
+            return res
+            .status(404)
+            .json({message : 'post not found or unavailable'});
+        }
+
+        const unsavedByUser = await User.findOneAndUpdate(
+            { _id: userid, isAvailable: { $ne: false } },
+            { $pull: { savedPosts: postid } },
+            { new: true }
+        );
+
+        if(!unsavedByUser) {
+            return res
+            .status(404)
+            .json({message : 'user not found or unavailable'});
+        }
+
+        return res
+        .status(200)
+        .json({message : `post unsaved successfully by user with id ${userid}`});
+
+    } catch (error) {
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : `error while unsaving post`});
+    }
+}
+
 export const deletepost = async (req, res) => {
     try {
         const postid = req.params.postid;
+        const userid = req.user.id;
 
-        const deletedpost = await Post.findByIdAndDelete(postid);
+        const deletedpost = await Post.findOneAndUpdate(
+            { _id: postid, author: userid, isAvailable: { $ne: false } },
+            { isAvailable: false },
+            { new: true }
+        );
 
         // console.log(deletedpost);
 
@@ -167,11 +376,11 @@ export const deletepost = async (req, res) => {
 
         return res
         .status(200)
-        .json({message : `post with id ${postid} deleted successsfully`});
+        .json({message : `post with id ${postid} marked unavailable successfully`});
 
     } catch (error) {
         console.log(error);
-         return res
+        return res
         .status(500)
         .json({message : `error while deleting post`});
     }
@@ -180,7 +389,8 @@ export const deletepost = async (req, res) => {
 export const getlikes = async (req, res) => {
     try {
         const postid = req.params.postid;
-        const post = await Post.findById(postid, 'likes').populate('likes', 'username avatar');
+        const post = await Post.findOne({ _id: postid, isAvailable: { $ne: false } }, 'likes')
+            .populate({ path: 'likes', select: 'username', match: { isAvailable: { $ne: false } } });
 
         if(!post) {
             return res
@@ -193,6 +403,9 @@ export const getlikes = async (req, res) => {
         .json({message:'all likes for post sent', post});
 
     } catch (error) {
-        
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : `error while getting likes`});
     }
 }

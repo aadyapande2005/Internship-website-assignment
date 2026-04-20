@@ -10,9 +10,13 @@ import HomePage from '../components/HomePage.tsx'
 import UserPage from '../pages/UserPage.tsx'
 import CreatePostPage from '../pages/CreatePostPage.tsx'
 import PostPage from '../pages/PostPage.tsx'
+import SavedPostsPage from '../pages/SavedPostsPage.tsx'
+import UserDetailPage from '../pages/UserDetailPage.tsx'
 
 import getposts from '../loaders/postLoader'
 import userPosts from '../loaders/userPostLoader.ts'
+import savedPostsLoader from '../loaders/savedPostsLoader.ts'
+import userDetailLoader from '../loaders/userDetailLoader.ts'
 
 import AuthContextProvider from '../context/authContext.tsx'
 import Protected from './Protected.tsx'
@@ -35,6 +39,11 @@ const router = createBrowserRouter([
       {
         path: '/register',
         element:<Register />
+      },
+      {
+        path: '/user/:userid',
+        element: <UserDetailPage />,
+        loader: userDetailLoader
       }
     ]
   },
@@ -46,6 +55,11 @@ const router = createBrowserRouter([
         path: '/profile',
         element: <UserPage />,
         loader: userPosts
+      },
+      {
+        path: '/saved',
+        element: <SavedPostsPage />,
+        loader: savedPostsLoader
       },
       {
         path:'/post',

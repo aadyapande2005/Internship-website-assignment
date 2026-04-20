@@ -17,10 +17,11 @@ const userSchema = new mongoose.Schema({
             type : String,
             required : true,
         },
-        avatar : {
-            type : String
-        },
         likes : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'Post'
+        }],
+        savedPosts : [{
             type : mongoose.Schema.Types.ObjectId,
             ref : 'Post'
         }],
@@ -30,7 +31,11 @@ const userSchema = new mongoose.Schema({
         }],
         refreshToken : {
             type : String
-        }    
+        },
+        isAvailable: {
+            type: Boolean,
+            default: true
+        }
     },
     {timestamps : true}
 );

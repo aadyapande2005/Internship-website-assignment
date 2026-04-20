@@ -1,2 +1,127 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap');
+
+:root {
+	--bg-0: #fff7eb;
+	--bg-1: #ffe6c7;
+	--bg-2: #ffd3a0;
+	--surface: #fff8ef;
+	--surface-2: #fffcf7;
+	--accent: #c25b23;
+	--accent-2: #8b3f16;
+	--ink: #3a2112;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	color: var(--ink);
+	font-family: 'Manrope', sans-serif;
+	background:
+		linear-gradient(115deg, rgba(255, 247, 235, 0.96), rgba(255, 236, 210, 0.9)),
+		url('https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=1800&q=80');
+	background-size: cover;
+	background-position: center;
+	background-attachment: fixed;
+}
+
+#root {
+	min-height: 100vh;
+}
+
+.app-shell {
+	min-height: 100vh;
+	position: relative;
+	overflow: hidden;
+}
+
+.app-glow {
+	position: absolute;
+	border-radius: 999px;
+	filter: blur(40px);
+	opacity: 0.35;
+	pointer-events: none;
+}
+
+.app-glow-left {
+	width: 18rem;
+	height: 18rem;
+	top: -4rem;
+	left: -4rem;
+	background: #fdba74;
+}
+
+.app-glow-right {
+	width: 22rem;
+	height: 22rem;
+	top: 8rem;
+	right: -6rem;
+	background: #fca5a5;
+}
+
+.app-content {
+	position: relative;
+	z-index: 1;
+}
+
+.display-title {
+	font-family: 'Fraunces', serif;
+}
+
+.rise-in {
+	animation: riseIn 520ms ease-out both;
+}
+
+.pressable {
+	transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.pressable:hover {
+	transform: translateY(-1px);
+	filter: brightness(1.02);
+}
+
+.pressable:active {
+	transform: translateY(0) scale(0.98);
+}
+
+.loading-dot {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 999px;
+	background: currentColor;
+	animation: softPulse 900ms ease-in-out infinite;
+}
+
+.likes-panel {
+	overflow: hidden;
+	transition: max-height 280ms ease, opacity 220ms ease, border-color 220ms ease;
+}
+
+@keyframes riseIn {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes softPulse {
+	0%,
+	100% {
+		opacity: 0.25;
+		transform: scale(0.8);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
 
