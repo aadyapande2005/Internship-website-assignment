@@ -6,6 +6,7 @@ import {
     getpost,
     getpostsbytopic,
     generatepost,
+    generatemultipleposts,
     likepost,
     unlikepost,
     savepost,
@@ -26,6 +27,7 @@ postroutes.get('/save/:postid', verifyjwt, savepost);
 postroutes.get('/unsave/:postid', verifyjwt, unsavepost);
 postroutes.get('/getlikes/:postid', getlikes);
 postroutes.post('/createpost', verifyjwt, generatepost);
+postroutes.post('/createposts', verifyjwt, generatemultipleposts);
 postroutes.delete('/deletepost/:postid', verifyjwt, deletepost)
 
 

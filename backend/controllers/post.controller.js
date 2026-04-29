@@ -15,6 +15,15 @@ const sanitizeTopics = (topics) => {
     return [...new Set(normalized)];
 }
 
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildTopicSearchRegex = (query) => {
+    const escapedQuery = escapeRegex(query);
+
+    // ILIKE-style contains match (case-insensitive), e.g. "front" -> "frontend".
+    return new RegExp(escapedQuery, 'i');
+};
+
 export const getposts = async (req, res) => {
     try {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -95,9 +104,15 @@ export const getpostsbytopic = async (req, res) => {
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 9, 1), 20);
         const skip = (page - 1) * limit;
 
-        const totalPosts = await Post.countDocuments({ topics: topic, isAvailable: { $ne: false } });
+        const topicRegex = buildTopicSearchRegex(topic);
+        const topicFilter = {
+            topics: { $elemMatch: { $regex: topicRegex } },
+            isAvailable: { $ne: false }
+        };
 
-        const posts = await Post.find({ topics: topic, isAvailable: { $ne: false } })
+        const totalPosts = await Post.countDocuments(topicFilter);
+
+        const posts = await Post.find(topicFilter)
             .populate({ path: 'author', select: 'username email', match: { isAvailable: { $ne: false } } })
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -195,6 +210,80 @@ export const generatepost = async (req, res) => {
         return res
         .status(500)
         .json({message : `error while getting post`});
+    }
+}
+
+export const generatemultipleposts = async (req, res) => {
+    try {
+        const userid = req.user.id;
+        const { posts } = req.body;
+
+        if(!Array.isArray(posts) || posts.length === 0) {
+            return res
+            .status(400)
+            .json({message : 'posts must be a non-empty array'});
+        }
+
+        const activeUser = await User.findOne({ _id: userid, isAvailable: { $ne: false } });
+
+        if(!activeUser) {
+            return res
+            .status(404)
+            .json({message : 'active user not found'});
+        }
+
+        const createdPosts = [];
+
+        for (const post of posts) {
+            const title = String(post?.title || '').trim();
+            const description = String(post?.description || '').trim();
+            const normalizedTopics = sanitizeTopics(post?.topics);
+
+            if(!title || !description) {
+                continue;
+            }
+
+            if(normalizedTopics.length > 3) {
+                return res
+                .status(400)
+                .json({message : 'maximum 3 topics are allowed per post'});
+            }
+
+            const newpost = await Post.create({
+                title,
+                description,
+                author: userid,
+                topics: normalizedTopics
+            });
+
+            createdPosts.push(newpost);
+        }
+
+        if(createdPosts.length === 0) {
+            return res
+            .status(400)
+            .json({message : 'no valid posts found in request'});
+        }
+
+        await User.findByIdAndUpdate(
+            userid,
+            { $addToSet: { posts: { $each: createdPosts.map((post) => post._id) } } },
+            { new: true }
+        );
+
+        return res
+        .status(200)
+        .json({
+            message : `multiple posts created successfully by user with id ${userid}`,
+            count: createdPosts.length,
+            posts: createdPosts
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res
+        .status(500)
+        .json({message : 'error while creating multiple posts'});
     }
 }
 
