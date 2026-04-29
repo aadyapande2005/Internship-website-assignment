@@ -3,7 +3,8 @@ import { useAuth } from '../context/authContext'
 import TopBar from '../components/TopBar';
 
 function Protected() {
-  const {user} = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
 
   return (
     <>

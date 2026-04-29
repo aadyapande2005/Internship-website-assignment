@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosError } from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,8 +12,8 @@ function Register() {
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     if (isSubmitting) return
 
     console.log('Username:', username);
@@ -35,14 +36,15 @@ function Register() {
 
     } catch (error) {
       // For Axios, error responses are in error.response.data
-      if (error.response) {
+      const axiosError = error as AxiosError<any>;
+      if (axiosError.response) {
         // The server responded with a status code outside 2xx
-        console.log('Error message:', error.response.data.message);
-        setError(error.response.data.message);
+        console.log('Error message:', axiosError.response.data.message);
+        setError(axiosError.response.data.message);
       } else {
         // Network error or request was not made
-        console.log('Error:', error.message);
-        setError(error.message);
+        console.log('Error:', axiosError.message);
+        setError(axiosError.message || 'An error occurred');
       }
     } finally {
       setIsSubmitting(false)

@@ -1,6 +1,6 @@
 import { apiRequest } from "../lib/apiRequest"
 
-const userPosts = async ({ params }: { params: { userId?: string } }) => {
+const userPosts = async ({ params: _ }: { params: { userId?: string } }) => {
     try {
         const authResponse = await apiRequest.get('/auth/islogin');
         

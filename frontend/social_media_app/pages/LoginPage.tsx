@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import { apiRequest } from '../lib/apiRequest';
 import { useAuth } from '../context/authContext';
 
@@ -10,9 +11,11 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate()
 
-  const {setUser} = useAuth();
+  const auth = useAuth();
+  const setUser = auth?.setUser;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     e.preventDefault()
     if (isSubmitting) return
 
@@ -34,21 +37,22 @@ function Login() {
 
       console.log(user)
 
-      setUser(user)
+      setUser?.(user)
 
       navigate('/')
 
     } catch (error) {
       // For Axios, error responses are in error.response.data
-      if (error.response) {
+      const axiosError = error as AxiosError<any>;
+      if (axiosError.response) {
         // The server responded with a status code outside 2xx
-        console.log('Error message:', error.response.data.message);
-        console.log('Status code:', error.response.status);
-        setError(error.response.data.message);
+        console.log('Error message:', axiosError.response.data?.message);
+        console.log('Status code:', axiosError.response.status);
+        setError(axiosError.response.data?.message || 'An error occurred');
       } else {
         // Network error or request was not made
-        console.log('Error:', error.message);
-        setError(error.message);
+        console.log('Error:', axiosError.message);
+        setError(axiosError.message || 'An error occurred');
       }
     } finally {
       setIsSubmitting(false)

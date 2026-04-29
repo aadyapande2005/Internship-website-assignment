@@ -3,7 +3,8 @@ import User from './User'
 import { useAuth } from '../context/authContext'
 
 function TopBar() {
-  const {user} = useAuth()
+  const auth = useAuth();
+  const user = auth?.user ?? null
   
   return (
     <>

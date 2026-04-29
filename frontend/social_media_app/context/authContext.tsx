@@ -1,8 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import type UserData from '../interfaces/userInterface.ts'
 import { apiRequest } from "../lib/apiRequest.ts";
 
-const AuthContext = createContext(null)
+interface AuthContextType {
+    user: UserData | null;
+    setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null)
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -13,7 +19,7 @@ export const useAuth = () => {
     return context;
 }
 
-function AuthContextProvider({ children }) {
+function AuthContextProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserData | null>(null);
 
     useEffect(() => {

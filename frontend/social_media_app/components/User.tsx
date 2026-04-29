@@ -1,5 +1,6 @@
 import type UserData from "../interfaces/userInterface";
 import { Link, useNavigate } from "react-router-dom";
+import { AxiosError } from "axios";
 import { apiRequest } from "../lib/apiRequest";
 import { useAuth } from "../context/authContext";
 
@@ -10,15 +11,17 @@ interface UserProps {
 function User({user}: UserProps) {
   const navigate = useNavigate();
 
-  const {setUser} = useAuth()
+  const auth = useAuth();
+  const setUser = auth?.setUser
 
   const handlelogout = async () => {
     try {
       await apiRequest.get('/auth/logout')
-      setUser(null)
+      setUser?.(null)
       navigate('/')
     } catch (error) {
-      console.log(error?.response.data)
+      const axiosError = error as AxiosError<any>;
+      console.log(axiosError?.response?.data)
       navigate('/login')
     }
   }
