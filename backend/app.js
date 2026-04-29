@@ -33,7 +33,7 @@ app.use('/user', userroutes);
 app.use(express.static(path.join(__dirname, "../frontend/social_media_app/dist")));
 
 // SPA catch-all route - serve index.html for all unmatched routes
-app.get("/*", (req, res) => {
+app.get(/\/.*/, (req, res) => {
   res.sendFile(path.resolve(__dirname, "../frontend/social_media_app/dist/index.html"));
 });
 
